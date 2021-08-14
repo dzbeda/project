@@ -1,0 +1,27 @@
+#set as true if collection kafka should be mirrored with customer kafka
+set_as_kafka_mirror: false
+
+###  The below section should be updated only if "set_as_kafka_mirror" = true  ###
+## Alias names - leave the defaults. If alias names need to be updated , please update the names unders cloudera SRM configuration ##
+
+kafka_source_alias_name: kafka-source
+kafka_source_zookeeper_hostname: 10.201.51.44  # Ip can be defined as well
+kafka_source_zookeeper_port: 2181
+
+kafka_destination_alias_name: kafka-destination
+srm_bin_path: /opt/cloudera/parcels/STREAMS_REPLICATION_MANAGER/bin/srm-control
+
+
+topic_list_file_path: /tmp/
+topic_list_file_name: topic-list.txt
+## Specify the topics that need to be mirrored from kafka_source ##
+kafka_topics_to_be_mirrored:
+     - { topic_name: test1 , number_of_partitions: 4}
+#     - { topic_name: source-dhcp-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-windows-eventlog-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-checkpoint-firewall-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-cyberbit-edr-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-mcafee-antivirus-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-gigamon-network-packets-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-windows-sysmon-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }
+#     - { topic_name: source-dns-events-tenant-<specify-the-tenamt-id> , number_of_partitions: 4 }

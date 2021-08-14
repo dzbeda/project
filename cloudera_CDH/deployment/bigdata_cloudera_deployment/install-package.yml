@@ -1,0 +1,6 @@
+
+# Install  Package
+  - name: install the latest 'ntp', 'python3', 'wget', 'net-tools', 'tree' , 'git' , 'iotop' , 'mc' , 'nano' , 'screen' , 'krb5-workstation' , 'krb5-libs' packages
+    yum:
+      name: ['ntp', 'python3', 'wget', 'net-tools', 'tree' , 'git' , 'iotop' , 'mc' , 'nano' , 'screen' , 'krb5-workstation' , 'krb5-libs' , 'nc' , 'tcpdump']
+      state: latest

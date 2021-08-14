@@ -1,0 +1,60 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+## Verification
+- hosts:
+      - bigdata_cloudera_manager
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka
+      - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  tasks:
+
+### Verification process ###
+
+# Ping Test #
+
+  - name: Verify that all hosts are reachable
+    ping:
+
+
+## Update SSSD ##
+
+- hosts:
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_kafka_master
+  any_errors_fatal: true
+  become: true
+  vars_files:
+    - ./cloudera_environment.yml
+  vars_prompt:
+    - name: "bind_user"
+      prompt: "bind user"
+      private: no
+
+    - name: "bind_password"
+      prompt: "bind password"
+      private: no
+  roles:
+    - sssd-agent
+

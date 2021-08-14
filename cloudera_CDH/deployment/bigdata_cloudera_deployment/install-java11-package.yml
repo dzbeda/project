@@ -1,0 +1,4 @@
+  - name: install java-11-openjdk' packages
+    yum:
+      name: ['java-11-openjdk-devel']
+      state: latest

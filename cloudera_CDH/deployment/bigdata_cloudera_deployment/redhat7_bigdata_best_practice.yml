@@ -1,0 +1,73 @@
+
+#Update SELinux configuration
+  - name: Put SELinux in permissive mode, logging actions that would be blocked. ; Value is updated in /etc/selinux/config file
+    selinux:
+      policy: targeted
+      state: permissive
+
+#Update vm.swappiness
+  - name : set vm.swappiness = 1 ; In order to check the value run cat /proc/sys/vm/swappiness
+    sysctl:
+      name: vm.swappiness
+      value: '1'
+      state: present
+    when: "'bigdata_postgres1' not in group_names"
+
+#Disable IPv6
+
+  - name: verify if IPv6 module exists
+    stat:
+      path: /proc/sys/net/ipv6/
+    register: ipv6
+
+  - name: diable IPv6 in conf
+    sysctl:
+      name: net.ipv6.conf.all.disable_ipv6
+      value: '1'
+      sysctl_set: yes
+    when: ipv6.stat.exists == True
+
+  - name: diable IPv6 in default
+    sysctl:
+      name: net.ipv6.conf.default.disable_ipv6
+      value: '1'
+      sysctl_set: yes
+    when: ipv6.stat.exists == True
+
+  - name: remove dracut-config-generic
+    shell: yum -y remove dracut-config-generic
+    register: a
+    when: ipv6.stat.exists == True and 'master' in group_names
+
+  - name: Rebuild the initramfs
+    shell: dracut -v -f
+    register: b
+    when: ipv6.stat.exists == True and 'master' in group_names
+
+
+#Disable transparent_hugepage
+
+  - name: Disable THP support scripts added to rc.local ; In order to verify run "cat /sys/kernel/mm/transparent_hugepage/enabled" and verify that never is inside {}
+    lineinfile:
+       path: /etc/rc.local
+       line: echo never > /sys/kernel/mm/transparent_hugepage/enabled
+    when: "'bigdata_postgres1' not in group_names"
+
+  - name: Disable THP support scripts added to rc.local ; In order to verify run "cat /sys/kernel/mm/transparent_hugepage/defrag" and verify that never is inside {}
+    lineinfile:
+       path: /etc/rc.local
+       line: echo never > /sys/kernel/mm/transparent_hugepage/defrag
+    when: "'bigdata_postgres1' not in group_names"
+
+  - name: Change permissions of /etc/rc.local to make it run on boot
+    shell: chmod +x /etc/rc.d/rc.local
+    when: "'bigdata_postgres1' not in group_names"
+
+#Stop and Disable firewalld in boot
+  - name: Stop and Disable firewalld in boot
+    systemd:
+      name: firewalld
+      state: stopped
+      enabled: no
+
+

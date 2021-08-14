@@ -1,0 +1,26 @@
+## Create repo config file
+
+  - name: add generic repo
+    yum_repository:
+      name: "{{generic_repo.yum_repository_name}}"
+      description: "{{generic_repo.yum_repository_description}}"
+      baseurl:  "{{generic_repo.yum_repository_address}}{{generic_repo.yum_repository_path}}"
+      enabled: "{{generic_repo.yum_repository_enabled}}"
+      gpgcheck: "{{generic_repo.yum_repository_gpgcheck}}"
+
+
+  - name: add cloudera repo
+    yum_repository:
+      name: "{{cloudera_managment_repo.yum_repository_name}}"
+      description: "{{cloudera_managment_repo.yum_repository_description}}"
+      baseurl:  "{{cloudera_managment_repo.yum_repository_address}}{{cloudera_managment_repo.yum_repository_path}}"
+      enabled: "{{cloudera_managment_repo.yum_repository_enabled}}"
+      gpgcheck: "{{cloudera_managment_repo.yum_repository_gpgcheck}}"
+
+  - name: add development repo
+    yum_repository:
+      name: "{{ development_repo.yum_repository_name }}"
+      description: "{{ development_repo.yum_repository_description }}"
+      baseurl:  "{{ development_repo.yum_repository_address}}{{development_repo.yum_repository_path }}"
+      enabled: "{{ development_repo.yum_repository_enabled }}"
+      gpgcheck: "{{ development_repo.yum_repository_gpgcheck }}"

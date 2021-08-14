@@ -1,0 +1,29 @@
+  - name: create directory
+    file:
+      path: "{{item.mount_path}}"
+      state: directory
+
+  - name: sleep for 10 seconds and continue with play
+    wait_for:
+      timeout: 10
+    delegate_to: localhost
+
+  - name: Create an ext4 filesystem
+    filesystem:
+      fstype: ext4
+      opts: -m0
+      dev: "{{item.drive}}"
+
+  - name: sleep for 10 seconds and continue with play
+    wait_for:
+      timeout: 10
+    delegate_to: localhost
+
+  - name: Mount drives
+    mount:
+      path: "{{item.mount_path}}"
+      src: "{{item.drive}}"
+      fstype: ext4
+      opts: defaults,noatime
+      state: mounted
+

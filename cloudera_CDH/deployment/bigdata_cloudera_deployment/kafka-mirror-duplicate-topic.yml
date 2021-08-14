@@ -1,0 +1,96 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./kafka_enviroment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+  - add_host:
+      name: "{{ kafka_source_zookeeper_hostname }}"
+      groups: kafka_source_master_server
+
+
+## Connect Kafka source in order to get topic list ##
+- hosts:
+      - kafka_source_master_server[0]
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./kafka_enviroment.yml
+  tasks:
+
+    - name: Create tgt for hadoop system user
+      include: generate-user-tgs.yml
+
+    - name: list topic from source kafka
+      command:
+        argv:
+          - kafka-topics
+          - --list
+          - --zookeeper
+          - localhost
+          - "{{ kafka_source_zookeeper_port }}"
+      register: kafka_topic_list
+
+    - name: Debug - print list of Topics
+      debug:
+        msg: "{{kafka_topic_list.stdout_lines}}"
+
+
+    - name: write topic list to a file
+      local_action: copy content={{ kafka_topic_list.stdout_lines }} dest={{ topic_list_file_path }}/{{ topic_list_file_name }}
+
+
+## Connect Kafka destination in order to define mirror configuration ##
+
+- hosts:
+      - bigdata_kafka_master[0]
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./kafka_enviroment.yml
+  tasks:
+
+    - name: Update register with topic list
+      shell: cat {{ topic_list_file_path }}/{{ topic_list_file_name }}
+      register: topic_raw
+      delegate_to: localhost
+
+
+    - name: Convert topic_raw to json
+      set_fact:
+        topic_list: "{{ topic_raw.stdout | from_json | list }}"
+
+    - name: debug - print topics
+      debug:
+        msg: "{{ topic_list }}"
+
+    - name: Create tgt for hadoop system user
+      include: generate-user-tgs.yml
+
+
+    - name: Create topic mirror  per topic
+      command:
+        argv:
+          - "{{ srm_bin_path }}"
+          - topics
+          - --source
+          - "{{ kafka_source_alias_name }}"
+          - --target
+          - "{{ kafka_destination_alias_name }}"
+          - --add
+          - "{{ item.topic_name }}"
+      loop: "{{ kafka_topics_to_be_mirrored }}"
+      when: item.topic_name in topic_list

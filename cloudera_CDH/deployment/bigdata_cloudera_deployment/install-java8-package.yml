@@ -1,0 +1,13 @@
+  - name: install java-8-openjdk' packages
+    yum:
+      name: ['java-1.8.0-openjdk-devel']
+      state: latest
+
+
+  - name: update jave security parameter
+    lineinfile:
+      dest: /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.252.b09-2.el7_8.x86_64/jre/lib/security/java.security
+      regexp: 'sun.security.krb5.disableReferrals=false'
+      line: 'sun.security.krb5.disableReferrals=true'
+      backrefs: yes
+    when: "'bigdata_kafka_master' in group_names"

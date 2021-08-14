@@ -1,0 +1,24 @@
+- name: extract acvs
+  unarchive:
+    src: "{{ item }}"
+    dest: "{{ avsc_tar_location_in_repo }}"
+    extra_opts: [--strip-components=2]
+  delegate_to: localhost
+  with_fileglob:
+    - "{{ avsc_tar_location_in_repo }}*.tar.gz"
+
+- name: Copy schema event file to worker[0]
+  copy:
+    src: "{{ avsc_tar_location_in_repo }}"
+    dest: "{{ avsc_temporary_location_on_worker }}"
+
+- name: create schema folder
+  shell: hdfs dfs -mkdir -p {{ hdfs_schema_folder }}
+
+- name: Upload Schema events
+  shell: hdfs dfs -put -f {{ avsc_temporary_location_on_worker}}*.avsc {{ hdfs_schema_folder }}
+
+- name: delete avsc files from worker[0] server
+  file:
+    path: "{{avsc_temporary_location_on_worker}}"
+    state: absent

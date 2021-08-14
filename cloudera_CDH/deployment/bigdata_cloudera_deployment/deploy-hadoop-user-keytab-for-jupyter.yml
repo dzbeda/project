@@ -1,0 +1,71 @@
+## Deploy Krb5 and generate keytab - based on user input ##
+
+- hosts: localhost
+  gather_facts: False
+  vars_files:
+      - ./cloudera_environment.yml
+  vars_prompt:
+    - name: "create_keytab"
+      prompt: "Press 1 to generate keytab for Hadoop system user or press 2 if keytab file: {{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}  was copied to master server under the following path: {{ hadoop_system_user.local_server_keytab_location }}/"
+      private: no
+      default: "2"
+
+  tasks:
+
+    - include_role:
+        name: deploy-krb5
+      when: create_keytab == "1"
+
+
+    - name: Generate Kerberos keytab
+      expect:
+        command: ktutil
+        responses:
+          ktutil:
+            - "add_entry -password -p {{ hadoop_system_user.username }}@{{ domain | upper }} -k 1 -e rc4-hmac"
+            - "wkt {{ hadoop_system_user.local_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+            - "quit"
+          Password: "{{ hadoop_system_user.password }}"
+      #delegate_to: localhost
+      when: create_keytab == "1"
+
+
+## Create Hadoop system user keytab secret ##
+
+- hosts: kmanager
+  remote_user: zolo
+  vars_files:
+    - ./cloudera_environment.yml
+    - ../defaults/airflow.yml
+    - ../defaults/jhub.yml
+  tasks:
+
+    ### Create keytab directory on kmanager server server ###
+    - name: Create directory where user keytab shall be saved
+      become: true
+      file:
+        path: "{{ hadoop_system_user.remote_server_keytab_location }}"
+        state: directory
+
+
+    ## Copy hadoop system user keytab file ##
+
+    - name: Copy keytab file
+      become: true
+      copy:
+        src: "{{ hadoop_system_user.local_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        dest: "{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+
+
+    ## create kubernetes secret using keycloak keytab file ##
+
+    - name: create keytab secret for hadoop system user on Enterprise GW namespace
+      shell: kubectl create secret generic {{ hadoop_user_secret }} -n {{ eg_namespace }} --from-file={{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }} --dry-run -o yaml | kubectl apply -f -
+
+    ### Remove old keycloak keytab file ###
+
+    - name: Security - Delete keycloak keytab file from remote server
+      become: true
+      file:
+        path: "{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        state: absent

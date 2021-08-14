@@ -1,0 +1,56 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - cloudera_environment.yml
+  tasks:
+
+  - add_host:
+        name: "{{ item.ip}}"
+        groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+## Run Playbook ##
+
+- hosts:
+    - bigdata_master
+    - bigdata_worker
+    - bigdata_kafka
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+## Master server ##
+
+  - name: Clean data
+    shell: rm -r -f {{ item.mount_path }}/*
+    loop: "{{ master_disks }}"
+    when: "'bigdata_master' in group_names"
+
+
+### worker server ##
+
+  - name: Clean data
+    shell: rm -r -f {{ item.mount_path }}/*
+    loop: "{{ worker_disks }}"
+    when: "'bigdata_worker' in group_names"
+
+### kafka server ##
+
+  - name: Clean data
+    shell: rm -r -f {{ item.mount_path }}/*
+    loop: "{{ kafka_disks }}"
+    when: "'bigdata_kafka' in group_names"
+
+
+### kafka_master server ##
+
+  - name: Clean data
+    shell: rm -r -f {{ item.mount_path }}/*
+    loop: "{{ kafka_master_disks }}"
+    when: "'bigdata_kafka_master' in group_names"

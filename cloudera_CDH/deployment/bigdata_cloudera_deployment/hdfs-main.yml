@@ -1,0 +1,50 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+## Run Playbook ##
+
+- hosts: bigdata_worker[0]
+  become: true
+  vars_files:
+    - cloudera_environment.yml
+    - /deployment/defaults/jhub.yml
+
+  vars:
+    avsc_tar_location_in_repo: /data/repo/solution/event-schema-avsc/
+    avsc_temporary_location_on_worker: /tmp/avsc/
+    pyspark_dependencies_tar_location_in_repo: /data/repo/bigdata_files/pyspark_dependencies
+    pyspark_dependencies_temp_location_in_remote: /tmp/pyspark-dependencies/
+    analytic_tar_location_in_repo: /data/repo/solution/analytics_files/
+    anatlytic_temp_location_in_remote: /tmp/analytics_files/
+    anatlytic_location_in_hdfs: "{{ hdfs_root_folder}}/analytics_files"
+  vars_prompt:
+    - name: "upload_analytic_modules"
+      prompt: "Press 1 if you wish to skip the step of uploading analytic modules to HDFS -- Press 2 if you wish to upload analytic modules to HDFS - if so , please make sure that the analytic module TAR file was uploaded to the master server under the follwoing path: {{ analytic_tar_location_in_repo }}"
+      private: no
+      default: "1"
+  tasks:
+
+    - name: Create tgt for hadoop system user
+      include: generate-user-tgs.yml
+
+    - name: Uploads AVSC schema to HDFS
+      include: upload-avsc-schema.yml
+
+    - name: Uploads pyspark dependencies to HDFS
+      include: upload-pyspark-dependencies.yml
+
+    - name: Uploads analytic modules to HDFS
+      include: upload-analytics-module.yml
+      when:  upload_analytic_modules == "2"

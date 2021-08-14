@@ -1,0 +1,13 @@
+#### Data Scientist User section ####
+## Include all Data Scientist User - All users must be presented in the domain ##
+# Password string should be updated only if customer wish that Verint will generate Keytab ##
+
+data_scientist:
+    - { login_name: user1 , password: password , folder_group_owner: read ,  folder_permission: 1750 }
+
+
+## This section is describe the playground root folder ##
+
+playground_root_folder:
+  folder_name: playground
+  folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1741}

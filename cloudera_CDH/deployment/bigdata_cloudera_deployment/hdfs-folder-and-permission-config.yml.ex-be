@@ -1,0 +1,169 @@
+### If ACL should  be configured the value should be updated from false to true ###
+## In case that HDFS is running on ISILON storage the value myst be set to false ##
+# In HDFS owner,groups and other must have execute (x) permission)
+configure_acl: false
+
+## Sensor prefix - Do not update ##
+sensor_prefix: source-
+stream_prefix: "-"
+raw_tenant_prefix: tenant_id=tid_
+curated_tenant_prefix: tenant_id=
+ioc_tenant_prefix: tenantId=
+
+
+### Root folder properties###
+root_folder:
+  folder_name: data
+  folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+  acl_users:
+    - {user: system1 , permission: rwx}
+  acl_groups:
+    - {group: read , permission: r--}
+
+
+
+### repository folder properties###
+repository_folders:
+  - repository_name: curated
+    folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+    acl_users:
+      - {user: system1 , permission: rwx}
+    acl_groups:
+      - {group: read , permission: r--}
+
+
+  - repository_name: raw
+    folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+    acl_users:
+      - {user: system1 , permission: rwx}
+    acl_groups:
+      - {group: read , permission: r--}
+
+
+
+### Sensor folder  properties -sensor directory Will be created under each repository folder ##
+## Sensor shall have at least one stream ##
+
+sensors_folder:
+  - sensor_name: dns
+    streams:
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+  - sensor_name: ad
+    streams:
+      - stream_name: dhcp
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+  - sensor_name: mcafee
+    streams:
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+  - sensor_name: sysmon
+    streams:
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+  - sensor_name: edr
+    streams:
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+  - sensor_name: checkpoint
+    streams:
+      - stream_name: events
+        folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+        acl_users:
+          - {user: system1 , permission: rwx}
+        acl_groups:
+          - {group: read , permission: r--}
+
+
+### tenants folder properties  - Tenant folder will be created under each sensor stream folder & ioc-sync folder ###
+
+tenants_folder:
+  - tenant_name: org1
+    description: This is organization 1 tenant folder
+    folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+    acl_users:
+      - {user: system1 , permission: rwx}
+    acl_groups:
+      - {group: read , permission: r--}
+
+
+  - tenant_name: org2
+    description: This is organization 2 tenant folder
+    folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+    acl_users:
+      - {user: system1, permission: rwx}
+    acl_groups:
+      - {group: read , permission: r--}
+
+### IOC folder properties ###
+## This folder will be created unser root folder ##
+
+ioc_folder:
+  folder_name: ioc
+  folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+  acl_users:
+    - {user: system1 , permission: rwx}
+  acl_groups:
+    - {group: read , permission: r--}
+  sub_folders:
+    - name: malformed
+      folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+      acl_users:
+        - {user: system1 , permission: rwx}
+      acl_groups:
+        - {group: read , permission: r--}
+
+    - name: input
+      folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+      acl_users:
+        - {user: system1 , permission: rwx}
+      acl_groups:
+        - {group: read , permission: r--}
+
+    - name: output
+      folder_permission: {user_owner: hdfs , group_owner: supergroup , permission: 1751}
+      acl_users:
+        - {user: system1 , permission: rwx}
+      acl_groups:
+        - {group: read , permission: r--}
+
+  output_folder_name: output #Tenats folder shall be created under this folder

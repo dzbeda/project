@@ -1,0 +1,13 @@
+---
+- hosts: localhost
+  become: yes
+  gather_facts: no
+  tasks:
+
+     - name: Enable ansible password prompts
+       replace:
+         dest: /deployment/ansible.cfg
+         regexp: "pass.*= False"
+         replace: "pass = True"
+       delegate_to: localhost
+       run_once: yes

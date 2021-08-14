@@ -1,0 +1,54 @@
+## Define owner for tenant folder ##
+
+- name: Generate tenant folder owner
+  command: python ./tenant-folder-owner.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/owner-script
+  delegate_to: localhost
+  register: register_tenant_folder_owner
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_tenant_folder_owner.stdout }}"
+
+- name: Implement tenant folder owner on HDFS
+  shell: hdfs dfs -chown -R {{ item }}
+  loop: "{{ register_tenant_folder_owner.stdout }}"
+
+## Define permission on tenant folder ##
+
+- name: Generate tenant folder permission
+  command: python ./tenant-folder-permission.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/permission-script
+  delegate_to: localhost
+  register: register_tenant_folder_permission
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_tenant_folder_permission.stdout }}"
+
+- name: Implement tenant folder permission on HDFS
+  shell: hdfs dfs -chmod {{ item }}
+  loop: "{{ register_tenant_folder_permission.stdout }}"
+
+
+## Define ACL for tenant folder ##
+
+- name: Generate tenant folder acl
+  command: python ./tenant-folder-acl.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/acl-script
+  delegate_to: localhost
+  register: register_tenant_folder_acl
+  when: configure_acl == true
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_tenant_folder_acl.stdout }}"
+  when: configure_acl == true
+
+- name: Implement tenant folder acl on HDFS
+  shell: 'hdfs dfs -setfacl -m default:{{ item }}'
+  loop: "{{ register_tenant_folder_acl.stdout }}"
+  when: configure_acl == true

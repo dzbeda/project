@@ -1,0 +1,45 @@
+## Create In memory inventory for Big data servers ##
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+
+## Deploy Krb5 - based on user input ##
+
+- hosts: localhost
+  gather_facts: False
+  vars_files:
+      - ./cloudera_environment.yml
+
+  tasks:
+
+    - include_role:
+        name: deploy-krb5
+
+
+
+# Distribute JASS file on all bigData servers ##
+
+- hosts:
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka_master
+      - bigdata_kafka
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  roles:
+    - deploy-jass-file

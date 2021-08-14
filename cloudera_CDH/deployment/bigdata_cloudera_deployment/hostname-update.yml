@@ -1,0 +1,16 @@
+### Update hostname and ETC/Hosts
+
+  - name: update hostname
+    hostname:
+      name : "{{item.hostname}}.{{domain}}"
+    loop: "{{server_details}}"
+    when: item.ip == ansible_default_ipv4.address
+
+
+#  - name: Update server etc/host
+#    lineinfile:
+#        path: /etc/hosts
+#        line: "{{item.ip}}  {{item.hostname}}.{{domain}}"
+#        state: present
+#        backup: yes
+#    loop: "{{server_details}}"

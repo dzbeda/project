@@ -1,0 +1,162 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+## Playbook ##
+- hosts: bigdata_repository
+  become: true
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./defaults/repository-config.yml
+
+  tasks:
+
+### Update hostname
+
+  - name: Verify server is avalible
+    ping:
+
+  - name: update hostname
+    hostname:
+      name : "{{ yum_repository.hostname }}.{{ domain }}"
+    when: yum_repository.ip == ansible_default_ipv4.address
+
+
+## Update /etc/hosts
+
+
+  - name: Update server etc/host
+    lineinfile:
+        path: /etc/hosts
+        line: "{{ yum_repository.ip }}  {{ yum_repository.hostname }}.{{ domain }}"
+        state: present
+        backup: yes
+
+
+#disable SElinux and firewall
+
+  - name: Stop and Disable firewalld in boot
+    systemd:
+      name: firewalld
+      state: stopped
+      enabled: no
+
+#Update SELinux configuration
+  - name: Put SELinux in permissive mode, logging actions that would be blocked. ; Value is updated in /etc/selinux/config file
+    selinux:
+      policy: targeted
+      state: permissive
+
+
+## Copy generic and cloudera Repos
+  - name: Copy generic repo files
+    copy:
+      src: "{{ yum_repo_file_path.generic_repo_files_location }}/"
+      dest: /var/www/html/generic
+      owner: zolo
+      group: zolo
+     # mode: u=rwx g=twx o=rwx
+
+  - name: Copy cloudera repo files
+    copy:
+      src: "{{ yum_repo_file_path.cloudera_repos_files_location }}/"
+      dest: /var/www/html/cloudera-repos
+      owner: zolo
+      group: zolo
+     # mode: u=rwx g=twx o=rwx
+
+  - name: Copy development repo files
+    copy:
+      src: "{{ yum_repo_file_path.development_repo_files_location }}/"
+      dest: /var/www/html/development-repo
+      owner: zolo
+      group: zolo
+     # mode: u=rwx g=twx o=rwx
+
+## Install HTTPD and Creatrepo packages using RPM -ivh
+
+  - name: Install createrepo and HTTPD using RPM install
+    shell: rpm -ivh {{item}}
+    args:
+      chdir: /var/www/html/generic/
+    loop:
+      - apr-1.4.8-7.el7.x86_64.rpm
+      - apr-util-1.5.2-6.el7.x86_64.rpm
+      - mailcap-2.1.41-2.el7.noarch.rpm
+      - httpd-tools-2.4.6-97.el7_9.x86_64.rpm
+      - httpd-2.4.6-97.el7_9.x86_64.rpm
+      - deltarpm-3.6-3.el7.x86_64.rpm
+      - python-deltarpm-3.6-3.el7.x86_64.rpm
+      - createrepo-0.9.9-28.el7.noarch.rpm
+    ignore_errors: yes
+
+
+### Update HTTPD Configuration
+
+  - name: Update http.conf file
+    lineinfile:
+      path: /etc/httpd/conf/httpd.conf
+      regexp: '^.*.AddType application/x-gzip .gz .tgz'
+      line:     AddType application/x-gzip .gz .tgz .parcel
+      backrefs: yes
+
+  - name: Update welocome.conf file for enabling index
+    lineinfile:
+      path: /etc/httpd/conf.d/welcome.conf
+      regexp: '^.*.Options -Indexes'
+      line:     Options +Indexes
+      backrefs: yes
+
+## Update generic repo
+
+  - name: Create repodata for the generic repo
+    command: createrepo /var/www/html/generic/
+
+## Update development repo
+
+  - name: Create repodata for the development repo
+    command: createrepo /var/www/html/development-repo/
+
+## Restart HTTPD and enable in boot
+
+  - name: Restart HTTPD and enable in boot
+    systemd:
+      name: httpd
+      state: restarted
+      enabled: yes
+
+## Create repo config file
+
+  - name: add generic repo client
+    yum_repository:
+      name: "{{generic_repo.yum_repository_name}}"
+      description: "{{generic_repo.yum_repository_description}}"
+      baseurl:  "{{generic_repo.yum_repository_address}}{{generic_repo.yum_repository_path}}"
+      enabled: "{{generic_repo.yum_repository_enabled}}"
+      gpgcheck: "{{generic_repo.yum_repository_gpgcheck}}"
+
+  - name: add development repo client
+    yum_repository:
+      name: "{{development_repo.yum_repository_name}}"
+      description: "{{development_repo.yum_repository_description}}"
+      baseurl:  "{{development_repo.yum_repository_address}}{{development_repo.yum_repository_path}}"
+      enabled: "{{development_repo.yum_repository_enabled}}"
+      gpgcheck: "{{development_repo.yum_repository_gpgcheck}}"
+
+## Install Packages
+
+  - name: install the latest 'createrepo', 'python3', 'java-11-openjdk', 'wget', 'net-tools', 'tree' , 'httpd' , 'ntp' , 'git' , 'iotop' , 'mc' , 'nano' , 'screen' pachages
+    yum:
+      name:  ['createrepo', 'python3', 'java-11-openjdk', 'wget', 'net-tools', 'tree' , 'httpd' , 'ntp' , 'git' , 'iotop' , 'mc' , 'nano' , 'screen']
+      state: latest
+

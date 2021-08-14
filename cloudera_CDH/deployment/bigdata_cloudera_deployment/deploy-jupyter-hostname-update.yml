@@ -1,0 +1,39 @@
+## Create In memory inventory for Big data servers ##
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+## Update /etc/hosts on all bigdata servers ##
+- hosts:
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - /deployment/defaults/jhub.yml
+    - /deployment/site-info.yml
+  tasks:
+
+  - name: Update server etc/host with resposnse ip to Jupyter Hub
+    lineinfile:
+        path: /etc/hosts
+        regexp: (.*{{ eg_external_service_name }}.{{ eg_namespace }}.svc.cluster.local)
+        line: "{{ lb_ext_ip | ipaddr('address') }}    {{ eg_external_service_name }}.{{ eg_namespace }}.svc.cluster.local"
+        state: present
+        backup: yes

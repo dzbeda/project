@@ -1,0 +1,43 @@
+---
+
+- name: Copy analytic model tar to worker[0]
+  copy:
+    src: "{{ item }}"
+    dest: "{{ anatlytic_temp_location_in_remote }}"
+  with_fileglob:
+    - "{{ analytic_tar_location_in_repo }}/*.tar.gz"
+
+
+- name: Get file list
+  find:
+    paths:
+      - "{{ anatlytic_temp_location_in_remote }}"
+    patterns: '*.tar.gz'
+  register: analytic_tar_file
+
+- debug:
+    msg: "{{ item.path }}"
+  with_items: "{{ analytic_tar_file.files }}"
+
+- name: extract analytic tar
+  unarchive:
+      src: "{{ item.path }}"
+      dest: "{{ anatlytic_temp_location_in_remote }}"
+      remote_src: yes
+      extra_opts: [--strip-components=1]
+  with_items: "{{ analytic_tar_file.files }}"
+
+
+- name: delete analytics_file folder in HDFS
+  shell: hdfs dfs -rm -r -f {{ anatlytic_location_in_hdfs }}
+
+- name: create analytics_file folder in HDFS
+  shell: hdfs dfs -mkdir -p {{ anatlytic_location_in_hdfs }}
+
+- name: upload analytic file to hdfs in {{ anatlytic_location_in_hdfs }}
+  shell: hdfs dfs -put -f {{anatlytic_temp_location_in_remote}}* {{ anatlytic_location_in_hdfs }}
+
+- name: Delete tzoloy file on Worker[0]
+  file:
+    path: "{{ anatlytic_temp_location_in_remote }}"
+    state: absent

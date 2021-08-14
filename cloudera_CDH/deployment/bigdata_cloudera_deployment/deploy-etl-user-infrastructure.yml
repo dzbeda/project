@@ -1,0 +1,142 @@
+## Create In memory inventory for Big data servers ##
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+
+## Deploy Krb5 and generate keytab - based on user input ##
+
+- hosts: localhost
+  gather_facts: False
+  vars_files:
+      - ./cloudera_environment.yml
+  vars_prompt:
+    - name: "create_keytab"
+      prompt: "Press 1 to generate keytab for Hadoop system user or press 2 if keytab file: {{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}  was copied to master server under the following path: {{ hadoop_system_user.local_server_keytab_location }}/"
+      private: no
+      default: "2"
+
+  tasks:
+
+    - include_role:
+        name: deploy-krb5
+      when: create_keytab == "1"
+
+
+    - name: Generate Kerberos keytab
+      expect:
+        command: ktutil
+        responses:
+          ktutil:
+            - "add_entry -password -p {{ hadoop_system_user.username }}@{{ domain | upper }} -k 1 -e rc4-hmac"
+            - "wkt {{ hadoop_system_user.local_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+            - "quit"
+          Password: "{{ hadoop_system_user.password }}"
+      #delegate_to: localhost
+      when: create_keytab == "1"
+
+
+#  distribute keytab & Jass file on all big data servers  ##
+
+- hosts:
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka_master
+      - bigdata_kafka
+  become: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+
+  tasks :
+#    - name: create hadoop system user on all big data servers
+#      user:
+#        name: "{{ hadoop_system_user.username }}"
+#        uid: "{{ hadoop_system_user.uid }}"
+#      ignore_errors: true
+
+    ### Create keytab directory on remote server ###
+    - name: Create directory where user keytab shall be saved
+      file:
+        path: "{{ hadoop_system_user.remote_server_keytab_location }}"
+        state: directory
+
+    ## Copy hadoop system user keytab file ##
+
+    - name: Copy keytab file
+      copy:
+        src: "{{ hadoop_system_user.local_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        dest: "{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        mode: o=rx
+
+
+# Distribute JASS file on all bigData servers ##
+
+- hosts:
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka_master
+      - bigdata_kafka
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  roles:
+    - deploy-jass-file
+
+
+
+
+## Create Hadoop system user keytab secret ##
+
+- hosts: kmanager
+  remote_user: zolo
+  vars_files:
+    - ./cloudera_environment.yml
+    - ../defaults/airflow.yml
+  tasks:
+
+    ### Create keytab directory on kmanager server server ###
+    - name: Create directory where user keytab shall be saved
+      become: true
+      file:
+        path: "{{ hadoop_system_user.remote_server_keytab_location }}"
+        state: directory
+
+
+    ## Copy hadoop system user keytab file ##
+
+    - name: Copy keytab file
+      become: true
+      copy:
+        src: "{{ hadoop_system_user.local_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        dest: "{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+
+
+    ## create kubernetes secret using keycloak keytab file ##
+
+    - name: create keytab secret
+      shell: kubectl create secret generic {{ hadoop_system_user.kubernetes_keytab_secret_name }} -n {{ airflow_namespace }} --from-file={{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }} --dry-run -o yaml | kubectl apply -f -
+
+
+
+    ### Remove old keycloak keytab file ###
+
+    - name: Security - Delete keycloak keytab file from remote server
+      become: true
+      file:
+        path: "{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+        state: absent

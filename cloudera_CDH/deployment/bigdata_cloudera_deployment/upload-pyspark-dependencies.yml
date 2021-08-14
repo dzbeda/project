@@ -1,0 +1,50 @@
+---
+- name: Copy pyspark-dependencies tar to worker[0]
+  copy:
+    src: "{{ item }}"
+    dest: "{{ pyspark_dependencies_temp_location_in_remote }}"
+  with_fileglob:
+    - "{{ pyspark_dependencies_tar_location_in_repo }}/*.tar"
+
+- name: Get tar file name list
+  find:
+    paths:
+      - "{{ pyspark_dependencies_temp_location_in_remote }}"
+    patterns: '*.tar'
+  register: pyspark_dependencies_tar_file
+
+- name: extract pyspark-dependencies tar
+  unarchive:
+    src: "{{ item.path }}"
+    dest: "{{ pyspark_dependencies_temp_location_in_remote }}"
+    remote_src: yes
+  with_items: "{{ pyspark_dependencies_tar_file.files}}"
+
+- name: Get file list
+  find:
+    paths:
+      - "{{ pyspark_dependencies_temp_location_in_remote }}"
+    patterns: '*.tar.gz'
+  register: pyspark_dependencies_files
+
+
+- name: grep hdfs path where the files should be copied to
+  set_fact:
+    hdfs_path: "{{ pyspark_deps_dir | regex_replace('hdfs://','')}}"
+  delegate_to: localhost
+
+- name: Crate directory in HDFS
+  shell: hdfs dfs -rm -r -f {{ hdfs_path }}
+
+- name: Crate directory in HDFS
+  shell: hdfs dfs -mkdir -p {{ hdfs_path }}
+
+- name: Copy pyspark-dependencies to hdfs
+  shell: hdfs dfs -put -f {{ item.path }} {{ hdfs_path }}
+  with_items:
+    - "{{ pyspark_dependencies_files.files }}"
+
+- name: delete pyspark-dependencies from worker[0] server
+  file:
+    path: "{{pyspark_dependencies_temp_location_in_remote}}"
+    state: absent

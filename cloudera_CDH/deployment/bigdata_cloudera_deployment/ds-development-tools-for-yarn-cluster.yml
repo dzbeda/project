@@ -1,0 +1,61 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+## Install  packages
+- hosts:
+      - bigdata_worker
+  become: true
+  any_errors_fatal: true
+  gather_facts: true
+  vars_files:
+    - ./defaults/repository-config.yml
+  tasks:
+  - name: Install main infrastracture  DS packages
+    yum:
+      name: ['gcc', 'python3-devel' , 'python3-pip']
+      state: latest
+
+  - name: Copy cloudera repo files
+    copy:
+      src: "{{ yum_repo_file_path.pip3_repos_files_location }}/"
+      dest: /tmp/pip3
+      owner: zolo
+      group: zolo
+     # mode: u=rwx g=twx o=rwx
+
+
+  - name: Install pip3 packages manually
+    shell: pip3 install {{ item.path }}/{{ item.file }} -f {{ item.path }} --no-index
+    loop:
+      - {file: future-0.18.2.tar.gz , path: /tmp/pip3/future}
+      - {file: ipykernel-5.3.4-py3-none-any.whl , path: /tmp/pip3/ipykernel}
+      - {file: jupyter_client-6.1.7-py3-none-any.whl , path: /tmp/pip3/jupyter_client}
+      - {file: ipython-7.16.1-py3-none-any.whl , path: /tmp/pip3/ipython}
+      - {file: pycryptodomex-3.9.8-cp36-cp36m-manylinux1_x86_64.whl , path: /tmp/pip3/pycryptodomex}
+
+
+  - name: Debug - Show installed PIp3 packages
+    shell: pip3 list --format=columns
+    register: pip3_installed_pacjage_list
+
+  - debug:
+      msg:  "{{ pip3_installed_pacjage_list.stdout_lines }}"
+
+
+#  - name: Install PIP3 components
+#    pip:
+#      name: ['ipython', 'jupyter-client','ipykernel','pycryptodomex', 'future' , 'matplotlib' ,'koalas' , 'pyarrow' , 'smart-open' , 'Gensim' , 'NLTK' , 'pyshark' ,'seaborn' , 'pandas' , 'sklearn' , 'scipy' , 'numpy']
+#      state: latest
+#      executable: pip3.6

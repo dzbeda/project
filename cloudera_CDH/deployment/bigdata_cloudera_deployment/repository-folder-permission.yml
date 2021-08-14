@@ -1,0 +1,54 @@
+## Define owner for repository folder ##
+
+- name: Generate repository folder owner
+  command: python ./repository-folder-owner.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/owner-script
+  delegate_to: localhost
+  register: register_repository_folder_owner
+
+- name: Python script output in register
+  debug:
+    msg:  "{{ register_repository_folder_owner.stdout }}"
+
+- name: Implement repository folder owner on HDFS
+  shell: hdfs dfs -chown -R {{ item }}
+  loop: "{{ register_repository_folder_owner.stdout }}"
+
+## Define permission on repository folder ##
+
+- name: Generate repository folder permission
+  command: python ./repository-folder-permission.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/permission-script
+  delegate_to: localhost
+  register: register_repository_folder_permission
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_repository_folder_permission.stdout }}"
+
+- name: Implement repository folder permission on HDFS
+  shell: hdfs dfs -chmod {{ item }}
+  loop: "{{ register_repository_folder_permission.stdout }}"
+
+
+## Define ACL for repository folder ##
+
+- name: Generate repository folder acl
+  command: python ./repository-folder-acl.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/acl-script
+  delegate_to: localhost
+  register: register_repository_folder_acl
+  when: configure_acl == true
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_repository_folder_acl.stdout }}"
+  when: configure_acl == true
+
+- name: Implement repository folder acl on HDFS
+  shell: 'hdfs dfs -setfacl -m default:{{ item }}'
+  loop: "{{ register_repository_folder_acl.stdout }}"
+  when: configure_acl == true

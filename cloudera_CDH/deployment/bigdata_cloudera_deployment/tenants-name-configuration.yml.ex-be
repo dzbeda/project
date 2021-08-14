@@ -1,0 +1,4 @@
+### tenants folder properties  - This will create CSV file that includes tenants information ###
+
+tenant_details:
+     - {tenant_name: org1, description: this is tenant organization }

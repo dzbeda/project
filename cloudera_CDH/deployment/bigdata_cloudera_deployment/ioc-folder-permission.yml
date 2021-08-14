@@ -1,0 +1,54 @@
+## Define owner for ioc folder ##
+
+- name: Generate ioc folder owner
+  command: python ./ioc-folder-owner.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/owner-script
+  delegate_to: localhost
+  register: register_ioc_folder_owner
+
+- name: Python script output in register
+  debug:
+    msg:  "{{ register_ioc_folder_owner.stdout }}"
+
+- name: Implement ioc folder owner on HDFS
+  shell: hdfs dfs -chown -R {{ item }}
+  loop: "{{ register_ioc_folder_owner.stdout }}"
+
+## Define permission on ioc folder ##
+
+- name: Generate ioc folder permission
+  command: python ./ioc-folder-permission.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/permission-script
+  delegate_to: localhost
+  register: register_ioc_folder_permission
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_ioc_folder_permission.stdout }}"
+
+- name: Implement ioc folder permission on HDFS
+  shell: hdfs dfs -chmod {{ item }}
+  loop: "{{ register_ioc_folder_permission.stdout }}"
+
+
+## Define ACL for ioc folder ##
+
+- name: Generate ioc folder acl
+  command: python ./ioc-folder-acl.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/acl-script
+  delegate_to: localhost
+  register: register_ioc_folder_acl
+  when: configure_acl == true
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_ioc_folder_acl.stdout }}"
+  when: configure_acl == true
+
+- name: Implement ioc folder acl on HDFS
+  shell: 'hdfs dfs -setfacl -m default:{{ item }}'
+  loop: "{{ register_ioc_folder_acl.stdout }}"
+  when: configure_acl == true

@@ -1,0 +1,45 @@
+- hosts: kmanager
+  become: true
+  vars_files:
+    - ./cloudera_environment.yml
+    - /deployment/defaults/jhub.yml
+    - ./jhub_users.yml
+  tasks:
+
+## Create namespace ##
+    - name: create kuberntes namespace {{ eg_namespace }}
+      become: false
+      shell: kubectl create namespace {{ eg_namespace }}
+      ignore_errors: true
+
+    - name: create kuberntes namespace {{ jhub_namespace }}
+      become: false
+      shell: kubectl create namespace {{ jhub_namespace }}
+      ignore_errors: true
+
+    - name: create kuberntes namespace {{ kernel_namespace }}
+      become: false
+      shell: kubectl create namespace {{ kernel_namespace }}
+      ignore_errors: true
+
+
+## Create config map for Krb5 configuration file ##
+
+    - name: Create directory where krb5.conf file  shall be saved
+      file:
+        path: "{{ jhub.remote_server_krb5_conf_location }}"
+        state: directory
+
+    - name: Create and Copy krb5.conf configuration file
+      template:
+        src: ./roles/deploy-krb5/templates/krb5.conf.j2
+        dest: "{{ jhub.remote_server_krb5_conf_location }}/krb5.conf"
+
+    - name: delete krb5.conf file configMap
+      become: false
+      shell: kubectl delete configmap krb5-config-d -n {{ kernel_namespace }}
+      ignore_errors: true
+
+    - name: create krb5.conf file configMap
+      become: false
+      shell: kubectl create configmap krb5-config-d -n {{ kernel_namespace }} --from-file={{ jhub.remote_server_krb5_conf_location }}/krb5.conf --dry-run -o yaml | kubectl apply -f -
