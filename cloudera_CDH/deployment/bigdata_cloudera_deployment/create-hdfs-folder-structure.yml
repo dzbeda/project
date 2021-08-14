@@ -1,0 +1,15 @@
+- name: Generate HDFS folder stucture
+  command: python create-hdfs-folder-structure.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/create-folder-script
+  delegate_to: localhost
+  register: register_folder_structure
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_folder_structure.stdout }}"
+
+- name: create folder stracture on HDFS
+  shell: hdfs dfs -mkdir -p {{ item }}
+  loop: "{{ register_folder_structure.stdout }}"
+

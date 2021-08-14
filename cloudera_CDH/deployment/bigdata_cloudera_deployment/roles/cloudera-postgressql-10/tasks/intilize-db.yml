@@ -1,0 +1,27 @@
+
+## Update langauge coding under /etc/locale.conf
+  - name: update language coding
+    shell: echo 'LC_ALL="en_US.UTF-8"' >> /etc/locale.conf
+
+
+## Intilize DB
+
+  - name: check if DB was intilize
+    shell: /usr/pgsql-10/bin/pg_isready | grep 'accepting connections'
+    register: intitilize
+    ignore_errors: yes
+
+
+  - name: initdb ; Log can be found under /var/lib/pgsql/10/initdb.log
+    shell: /usr/pgsql-10/bin/postgresql-10-setup initdb
+    ignore_errors: yes
+    when: intitilize is failed
+
+
+
+## Start postgres service and load in boot
+  - name: start and enable in boot the postgresql-10 service
+    systemd:
+      name: postgresql-10
+      state: restarted
+      enabled: yes

@@ -1,0 +1,5 @@
+---
+# tasks file for deploy-krb5
+- include: install-krb5-user.yml
+- include: deploy-krb5-conf.yml
+

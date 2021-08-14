@@ -1,0 +1,244 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+
+  - add_host:
+        name: "{{ item.ip}}"
+        groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+## Verification
+- hosts:
+      - bigdata_postgres1
+      - bigdata_cloudera_manager
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka
+      - bigdata_repository
+      - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  tasks:
+
+### Verification process ###
+
+# Ping Test #
+
+  - name: Verify that all hosts are reachable
+    ping:
+
+
+# Verification of cloudera environment file #
+
+  - name: Verify that there is no IP or Hostname duplication in cloudera_enviroment.yml file
+    command: python verify-environment-file.py
+    register: python_result
+    delegate_to: localhost
+
+  - fail:
+      msg: "{{python_result.stdout}}"
+    when: python_result.stdout != ""
+    delegate_to: localhost
+
+## Update DNS ##
+
+- hosts:
+    - bigdata_postgres1
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_repository
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  roles:
+    - dns-resolve
+
+## Prepare OS ##
+
+- hosts:
+    - bigdata_postgres1
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./defaults/repository-config.yml
+    - /deployment/defaults/jhub.yml
+
+  tasks:
+
+  - name: update server hostname
+    include: hostname-update.yml
+
+  - name: OS update for supporting cloudera best practices
+    include: redhat7_bigdata_best_practice.yml
+
+  - name: update repository file
+    include: update-yum-repo.yml
+
+  - name: Install rpm packages
+    include: install-package.yml
+
+
+## Install Openjdk 11 ##
+- hosts:
+    - bigdata_postgres1
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+
+  tasks:
+
+  - name: Install Java 11
+    include: install-java11-package.yml
+
+## Install Openjdk 8 ##
+- hosts:
+      - bigdata_kafka
+      - bigdata_kafka_master
+
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+
+  tasks:
+
+  - name: Install Java 8
+    include: install-java8-package.yml
+
+## Update NTP ##
+
+- hosts:
+    - bigdata_postgres1
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_repository
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  roles:
+    - ntp
+
+## Install Node exporter ##
+
+- hosts:
+    - bigdata_postgres1
+    - bigdata_cloudera_manager
+    - bigdata_worker
+    - bigdata_master
+    - bigdata_gw
+    - bigdata_kafka
+    - bigdata_repository
+    - bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+  roles:
+    - node-exporter
+
+# Install Postgres 10.11 ##
+
+- hosts: bigdata_postgres1
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./defaults/postgres-config.yml
+  roles:
+    - cloudera-postgressql-10
+
+## Format worker disks ##
+- hosts: bigdata_worker
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+    - name: Worker servers - Create file system and mount
+      include: disk_management.yml
+      loop: "{{ worker_disks }}"
+
+
+### Format Master disks ###
+- hosts: bigdata_master
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+    - name: Master servers - Create file system and mount
+      include: disk_management.yml
+      loop: "{{ master_disks }}"
+
+
+### Format kafka Master disks ###
+- hosts: bigdata_kafka_master
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+    - name: kafka-Master servers - Create file system and mount
+      include: disk_management.yml
+      loop: "{{ kafka_master_disks }}"
+
+### Format kafka  disks ###
+- hosts: bigdata_kafka
+  become: true
+  any_errors_fatal: true
+  vars_files:
+    - ./cloudera_environment.yml
+  tasks:
+    - name: kafka servers - Create file system and mount
+      include: disk_management.yml
+      loop: "{{ kafka_disks }}"
+
+
+
+### Cloudera manager Database preparation ###
+- hosts: bigdata_cloudera_manager
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - ./cloudera_environment.yml
+    - ./defaults/postgres-config.yml
+  roles:
+    - cloudera-manager
+

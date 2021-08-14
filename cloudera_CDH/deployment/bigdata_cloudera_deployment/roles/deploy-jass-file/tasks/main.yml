@@ -1,0 +1,4 @@
+---
+# tasks file for deploy-krb5
+- include: deploy-jass-conf.yml
+

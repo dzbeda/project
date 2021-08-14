@@ -1,0 +1,12 @@
+####  Copy NTP File
+- name: Copy ntp.conf
+  template:
+    src: ntp.conf.j2
+    dest: /etc/ntp.conf
+
+- name: start ntpd service
+  systemd:
+    name: ntpd
+    state: restarted
+    enabled: yes
+

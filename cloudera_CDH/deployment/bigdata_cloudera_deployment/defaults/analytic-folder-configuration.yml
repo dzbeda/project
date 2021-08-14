@@ -1,0 +1,13 @@
+### Analytic main folder properties###
+analytic_main_folder: analytics
+
+### Per Analytic folder properties###
+analytic:
+  - analytic_name: analytic-01
+    subfolder:
+      - folder_name: features
+      - folder_name: predictions
+
+
+
+

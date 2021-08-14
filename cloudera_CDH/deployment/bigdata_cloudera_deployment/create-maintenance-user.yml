@@ -1,0 +1,52 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - cloudera_environment.yml
+  tasks:
+
+  - add_host:
+      name: "{{ item.ip}}"
+      groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+## Playbook ##
+- hosts:
+      - bigdata_postgres1
+      - bigdata_cloudera_manager
+      - bigdata_worker
+      - bigdata_master
+      - bigdata_gw
+      - bigdata_kafka
+      - bigdata_repository
+      - bigdata_kafka_master
+  remote_user: root
+  vars_files:
+    - ./cloudera_environment.yml
+  gather_facts: False
+  tasks:
+
+# Ping Test #
+
+  - name: Verify that all hosts are reachable
+    ping:
+
+# Create User #
+
+  - name: create maintenance user
+    user:
+      name: "{{maintenance_user.username}}"
+      # In order to generate the password run the folowing command  :    python -c 'import crypt; print crypt.crypt("eneter_your_password_string", "$6$SomeSalt$")'
+      password: "{{maintenance_user.password}}"
+      uid: "{{maintenance_user.uid}}"
+      shell: /bin/bash
+      append: yes
+
+  - name:
+    lineinfile:
+      path: /etc/sudoers.d/{{maintenance_user.username}}
+      line: "{{maintenance_user.username}} ALL=(ALL) NOPASSWD:ALL"
+      create: yes
+

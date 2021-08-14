@@ -1,0 +1,15 @@
+- name: Generate IOC folder stucture
+  command: python create-ioc-folder-structure.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/create-folder-script
+  delegate_to: localhost
+  register: register_ioc_folder_structure
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_ioc_folder_structure.stdout }}"
+
+- name: create IOC folder stracture on HDFS
+  shell: hdfs dfs -mkdir -p {{ item }}
+  loop: "{{ register_ioc_folder_structure.stdout }}"
+

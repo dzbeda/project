@@ -1,0 +1,22 @@
+## Prepare cloudera SCM DB ##
+  - name: Prepare Cloudera DB
+    command: sh /opt/cloudera/cm/schema/scm_prepare_database.sh postgresql -h {{postgres_server.ip}} --scm-host {{cloudera_managment_server.ip}} scm {{item.role}} {{item.password}}
+    register: output
+    loop: "{{ postgres_create_users }}"
+    when: item.role == "scm"
+
+  - debug: msg="{{ output }}"
+
+
+ ## Start clouder server service and load in boot
+  - name: restart the cloudera server service
+    service:
+      name:  cloudera-scm-server
+      state: restarted
+
+
+#  - name: create zolo user
+#    command: 'cat /var/log/cloudera-scm-server/cloudera-scm-server.log | grep "INFO WebServerImpl:com.cloudera.server.cmf.WebServerImpl: Started Jetty server."'
+#    register: output
+#  - debug: msg="{{ output.stdout }}"
+#  - debug: msg="{{ output.stderr }}"

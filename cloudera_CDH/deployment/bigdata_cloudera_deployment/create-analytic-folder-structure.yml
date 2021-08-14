@@ -1,0 +1,15 @@
+- name: Generate Analytic folder stucture
+  command: python create-analytic-folder-structure.py -f {{ configuration_file }}
+  args:
+    chdir: ./files/create-folder-script
+  delegate_to: localhost
+  register: register_analytic_create_folder
+
+- name: Python script output in register
+  debug:
+    msg: "{{ register_analytic_create_folder.stdout }}"
+
+- name: create Analytic folder stracture on HDFS
+  shell: hdfs dfs -mkdir -p {{ item }}
+  loop: "{{ register_analytic_create_folder.stdout }}"
+

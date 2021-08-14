@@ -1,0 +1,112 @@
+## This file includes all enviroment variables ##
+
+###  Yum repository information  ###
+yum_repository:
+     ip: 1.1.1.1
+     hostname: repository
+
+###  Postgres server information  ###
+postgres_server:
+     ip: 1.1.1.2
+     hostname: postgres
+postgres_create_users:
+        - {role: scm , password: password_string }
+        - {role: amon , password: password_string}
+        - {role: rman , password: password_string}
+        - {role: hue , password: password_string}
+        - {role: hive , password: password_string}
+        - {role: registry , password: registry}
+        - {role: streamsmsgmgr , password: streamsmsgmgr}
+
+###  Cloudera Managment  server information  ###
+cloudera_managment_server:
+     ip: 1.1.1.3
+     hostname: cloudera-mgr
+
+
+### This section defines the customer domain information ###
+
+domain: example.com
+domain_server: 1.1.1.4  # Can be IP or Hostname
+resolve_search:
+      - "{{ domain }}"
+resolve_nameservers:
+      - 1.1.1.4
+override_gid: 999999  # leave as default
+ldap_group_search_base: DC=example,DC=com  # Domain filter
+ldap_user_search_base: DC=example,DC=com  # Domain filter
+join_computer_path: OU=computer_hosts,OU=hadoop_prod,DC=example,DC=com  # path on active directory where bigData computer shall be added
+
+
+
+### This section defines the environment IPs and Hostnames  ###
+server_details:
+     - {ip: "{{ yum_repository.ip }}" , hostname: "{{ yum_repository.hostname }}" , group: bigdata_repository}
+     - {ip: "{{ cloudera_managment_server.ip }}" , hostname: "{{ cloudera_managment_server.hostname }}" , group: bigdata_cloudera_manager}
+     - {ip: "{{ postgres_server.ip }}" , hostname: "{{ postgres_server.hostname }}" , group: bigdata_postgres1}
+     - {ip: 1.1.1.5 , hostname: cdh-master1 , group: bigdata_master}
+     - {ip: 1.1.1.6 , hostname: cdh-master2 , group: bigdata_master}
+     - {ip: 1.1.1.7 , hostname: cdh-master3 , group: bigdata_master}
+     - {ip: 1.1.1.8 , hostname: worker1 , group: bigdata_worker}
+     - {ip: 1.1.1.9 , hostname: worker2 , group: bigdata_worker}
+     - {ip: 1.1.1.10 , hostname: worker3 , group: bigdata_worker}
+     - {ip: 1.1.1.11 , hostname: worker4 , group: bigdata_worker}
+     - {ip: 1.1.1.12 , hostname: kafka1 , group: bigdata_kafka}
+     - {ip: 1.1.1.13 , hostname: kafka2 , group: bigdata_kafka}
+     - {ip: 1.1.1.14 , hostname: kafka3 , group: bigdata_kafka}
+     - {ip: 1.1.1.15 , hostname: gw1 , group: bigdata_gw}
+     - {ip: 1.1.1.16 , hostname: kafka-master1 , group: bigdata_kafka_master}
+     - {ip: 1.1.1.17 , hostname: kafka-master2 , group: bigdata_kafka_master}
+     - {ip: 1.1.1.18 , hostname: kafka-master3 , group: bigdata_kafka_master}
+
+### This section defines the maintenance user creation that is used for cloudera installation  ###
+maintenance_user:
+     username: zolo
+     # In order to generate the password run the following command  :    python -c 'import crypt; print crypt.crypt("Enter_your_password_string", "$6$SomeSalt$")'
+     password: $6$SomeSalt$OZfauvzhNbFfDWdPm0EobedMKegzZTZ3iSap8h69QER6wuhWyUV81sQlXhTPlaVwN/6n4XCKZ
+     uid: 1000
+
+hadoop_system_user:
+     username: systemhdfs
+     password: user_password_on_domain_server
+     uid: 2000
+     local_server_keytab_location: /tmp
+     remote_server_keytab_location: /opt/solution
+     keytab_file_extension: keytab
+     kubernetes_keytab_secret_name: etluser.keytab
+
+### This define the main folders on HDFS that are required Huntics solution
+hdfs_root_folder: /data
+hdfs_schema_folder: /data/schemas
+
+### NTP Parameters ##
+
+ntp:
+     timezone: UTC
+     ntp_server_ip: 100.10.10.10
+
+### Disk Configuration ###
+## Please specify for each server type the disk configuration that should be mounted ##
+worker_disks:
+     - {drive: /dev/sdb ,mount_path: /data1}
+     - {drive: /dev/sdc ,mount_path: /data2}
+     - {drive: /dev/sdd ,mount_path: /data3}
+
+
+master_disks:
+     - {drive: /dev/sdb ,mount_path: /zookeeper}  #Zookeeper disk should be based on 2T SAS in raid 1
+     - {drive: /dev/sdc ,mount_path: /dfs/nn}     #Should be based on SSD disk at least 500G
+     - {drive: /dev/sdd ,mount_path: /dfs/jn}     #Should be based on SSD disk at least 500G
+
+kafka_disks:
+     - {drive: /dev/sdb ,mount_path: /data1}
+     - {drive: /dev/sdc ,mount_path: /data2}
+     - {drive: /dev/sdd ,mount_path: /data3}
+
+kafka_master_disks:
+     - {drive: /dev/sdb ,mount_path: /zookeeper}
+     - {drive: /dev/sdc ,mount_path: /dfs/nn}
+     - {drive: /dev/sdd ,mount_path: /dfs/jn}
+                                                                                                                                                                                           
+### Define the yarn resource pool from which DS user will get the resource - If not configured default will be based on Yarn pool configuartion ##
+ds_users_yarn_pool: root.users

@@ -1,0 +1,4 @@
+---
+# defaults file for deploy-krb5
+domain: example.com
+domain_server: dc1

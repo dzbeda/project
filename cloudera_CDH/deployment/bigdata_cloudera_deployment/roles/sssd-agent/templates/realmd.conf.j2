@@ -1,0 +1,4 @@
+[{{ domain.lower() }}]
+computer-ou = {{ join_computer_path }}
+# Please note that the computer-name / netbios name cannot exceed 15 characters
+computer-name = {{ ansible_hostname[-15:]}}

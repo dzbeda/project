@@ -1,0 +1,35 @@
+---
+  - name: Install packages
+    yum:
+       name:
+         - adcli
+         - sssd
+         - realmd
+         - oddjob
+         - oddjob-mkhomedir
+         - openldap-clients
+         - nscd
+       state: present
+
+
+  - name: Copy realmd.conf
+    template: src=realmd.conf.j2 dest=/etc/realmd.conf mode=0644 owner=root group=root backup=yes force=yes
+
+  - name: Restart the realmd service
+    command: systemctl restart realmd
+
+  - name: Join using realmd
+    shell: 'echo "{{ bind_password }}" | /bin/bash -c "/usr/sbin/realm join {{ domain }} -U {{ bind_user }} --membership-software=adcli --user-principal=host/{{ansible_fqdn}}@{{domain.upper()}}"'
+    ignore_errors: yes
+
+  - name: Copy sssd.conf
+    template: src=sssd.conf.j2 dest=/etc/sssd/sssd.conf mode=0600 owner=root group=root backup=yes force=yes
+
+  - name: Restart the sssd service
+    command: systemctl restart sssd
+
+  - name: Copy nscd.conf
+    template: src=nscd.conf.j2 dest=/etc/nscd.conf mode=0644 owner=root group=root backup=yes force=yes
+
+  - name: Restart the nscd service
+    command: systemctl restart nscd

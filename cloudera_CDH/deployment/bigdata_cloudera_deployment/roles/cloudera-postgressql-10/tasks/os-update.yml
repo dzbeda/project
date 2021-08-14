@@ -1,0 +1,12 @@
+#Update SELinux configuration
+  - name: Put SELinux in permissive mode, logging actions that would be blocked. ; Value is updated in /etc/selinux/config file
+    selinux:
+      policy: targeted
+      state: permissive
+
+#Stop and Disable firewalld in boot
+  - name: Stop and Disable firewalld in boot
+    systemd:
+      name: firewalld
+      state: stopped
+      enabled: no

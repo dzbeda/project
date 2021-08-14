@@ -1,0 +1,10 @@
+### Create keytab directory on remote server ###
+  - name: Create directory where user keytab shall be saved
+    file:
+      path: "{{ hadoop_system_user.remote_server_keytab_location }}"
+      state: directory
+
+  - name:
+    template:
+      src: ./jaas.conf.j2
+      dest: "{{ hadoop_system_user.remote_server_keytab_location }}/jaas.conf"

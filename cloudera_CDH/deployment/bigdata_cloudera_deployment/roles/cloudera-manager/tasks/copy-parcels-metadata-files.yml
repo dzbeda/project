@@ -1,0 +1,20 @@
+## Copy Parcel Meta Data ##
+# Each cloudera parcels requires that the metadata will be avalible on cloudera manager server under /opt/cloudera/csd/"
+
+  - name: copy schema registery parcel metadata jar
+    get_url:
+      url: "http://{{ yum_repository.hostname }}.{{ domain }}/cloudera-repos/parcel_metadata/SCHEMAREGISTRY-0.8.0.jar"
+      dest: /opt/cloudera/csd/SCHEMAREGISTRY-0.8.0.jar
+      #mode: '0440'
+
+  - name: copy STREAMS_MESSAGING_MANAGER parcel metadata jar
+    get_url:
+      url: "http://{{ yum_repository.hostname }}.{{ domain }}/cloudera-repos/parcel_metadata/STREAMS_MESSAGING_MANAGER-2.1.0.jar"
+      dest: /opt/cloudera/csd/STREAMS_MESSAGING_MANAGER-2.1.0.jar
+      #mode: '0440'
+
+  - name: copy STREAMS_Replication_MANAGER parcel metadata jar
+    get_url:
+      url: "http://{{ yum_repository.hostname }}.{{ domain }}/cloudera-repos/parcel_metadata/STREAMS_REPLICATION_MANAGER-1.0.0.jar"
+      dest: /opt/cloudera/csd/STREAMS_REPLICATION_MANAGER-1.0.0.jar
+      #mode: '0440'

@@ -1,0 +1,14 @@
+
+
+## Install  Package
+  - name: install the latest  , 'krb5-workstation' , 'krb5-libs' , openldap-clients  packages
+    yum:
+      name: ['ntp', 'python3', 'java-11-openjdk', 'wget', 'net-tools', 'tree' , 'git' , 'iotop' , 'mc' , 'nano' , 'screen' , 'krb5-workstation' , 'krb5-libs' ,'openldap-clients']
+      state: latest
+
+## Install cloudera-manager  Package
+  - name: install the latest version of cloudera-manager-daemons  & cloudera-manager-server
+    yum:
+      name: ['cloudera-manager-daemons',  'cloudera-manager-server']
+      state: latest
+

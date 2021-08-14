@@ -1,0 +1,5 @@
+###  Set time zone
+
+- name: Set timezone
+  timezone:
+    name: "{{ ntp.timezone }}"

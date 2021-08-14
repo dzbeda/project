@@ -1,0 +1,10 @@
+## Disable chronyd service to start in boot - when starting at boot it disable ntpd to start at boot ##
+- name: get service facts
+  service_facts:
+
+- name: disable chronyd service
+  systemd:
+    name: chronyd
+    state: stopped
+    enabled: no
+  when: ansible_facts.services ["chronyd.service"] is defined

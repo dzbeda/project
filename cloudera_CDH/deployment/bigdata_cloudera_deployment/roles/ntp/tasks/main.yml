@@ -1,0 +1,6 @@
+---
+# tasks file for ntp
+- include: set-timezone.yml
+- include: sync-hardware-clock.yml
+- include: disable-chronyd-service.yml
+- include: update-ntp-conf-file.yml

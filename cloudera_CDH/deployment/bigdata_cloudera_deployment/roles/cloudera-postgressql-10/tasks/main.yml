@@ -1,0 +1,8 @@
+---
+# tasks file for cloudera-postgressql-10
+
+- include: os-update.yml
+- include: package-installation.yml
+- include: intilize-db.yml
+- include: postgres-configuration-update.yml
+- include: create_postgressql_user_db.yml

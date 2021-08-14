@@ -1,0 +1,11 @@
+postgres_configuration:
+     postgresql_configuration_file_path: /var/lib/pgsql/10/data/postgresql.conf
+     pg_hba_configuration_file_path: /var/lib/pgsql/10/data/pg_hba.conf
+     postgresql_parameters:
+          - {parameter: max_connections , value: 1000} # Need to have at least 1000 connections per DB
+          - {parameter: wal_buffers , value: 8MB}
+          - {parameter: shared_buffers , value: 256MB}
+          - {parameter: checkpoint_completion_target , value: 0.9}
+          - {parameter: max_wal_size , value: 768MB}
+          - {parameter: min_wal_size , value: 80MB}
+          - {parameter: listen_addresses , value: "'*'"}

@@ -1,0 +1,34 @@
+###  Yum repository information  ###
+yum_repo_file_path:
+     generic_repo_files_location: /data/repo/bigdata_files/generic-repo-files
+     development_repo_files_location: /data/repo/bigdata_files/development-repo-file
+     cloudera_repos_files_location: /data/repo/bigdata_files/cloudera-cdp-files
+     pip3_repos_files_location: /data/repo/bigdata_files/pip3-packages
+
+### This section define the yum repo file that is required in order to connect to the yum repository ###
+### This section should not be updated by the user ###
+
+generic_repo:
+     yum_repository_name: generic
+     yum_repository_address: "http://{{ yum_repository.hostname }}.{{ domain }}/"
+     yum_repository_path: generic
+     yum_repository_description: generic rpm files
+     yum_repository_enabled: 1
+     yum_repository_gpgcheck: 0
+
+development_repo:
+     yum_repository_name: development-repo
+     yum_repository_address: "http://{{ yum_repository.hostname }}.{{ domain }}/"
+     yum_repository_path: development-repo
+     yum_repository_description: development rpm files
+     yum_repository_enabled: 1
+     yum_repository_gpgcheck: 0
+
+
+cloudera_managment_repo:
+     yum_repository_name: cloudera-repo
+     yum_repository_address: "http://{{ yum_repository.hostname }}.{{ domain }}/"
+     yum_repository_path: cloudera-repos/cm7
+     yum_repository_description: cloudera-repo files
+     yum_repository_enabled: 1
+     yum_repository_gpgcheck: 0

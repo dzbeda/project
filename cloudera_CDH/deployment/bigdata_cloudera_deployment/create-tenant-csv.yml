@@ -1,0 +1,13 @@
+## Generate tenants.csv file on HDFS ##
+  - name: Generate tenant.csv file
+    copy:
+      dest: "{{ tenants_csv_file_destination_path }}/{{ tenants_file_name }}"
+      content: |
+        {{ header1 }},{{ header2 }}
+        {% for item in tenant_details%}
+        {{ item.tenant_name }},{{ item.description }}
+        {% endfor %}
+    loop: "{{ tenant_details }}"
+
+  - name: upload file to HDFS
+    shell: hdfs dfs -put -f {{ tenants_csv_file_destination_path }}/{{ tenants_file_name }} {{ hdfs_root_folder }}

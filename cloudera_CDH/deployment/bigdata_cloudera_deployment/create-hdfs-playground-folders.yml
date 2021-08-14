@@ -1,0 +1,53 @@
+## Create In memory inventory
+- hosts: localhost
+  become: true
+  any_errors_fatal: true
+  gather_facts: False
+  vars_files:
+    - cloudera_environment.yml
+  tasks:
+
+  - add_host:
+        name: "{{ item.ip}}"
+        groups: "{{ item.group }}"
+    loop: "{{ server_details }}"
+
+
+## Create playground folders on HDFS ##
+
+- hosts: bigdata_worker[0]
+  become: true
+  vars_files:
+    #- ./hdfs-folder-and-permission-config.yml
+    - ./cloudera_environment.yml
+    - ./jhub_users.yml
+
+  tasks:
+
+  - name: Create tgt for hadoop system user
+    include: generate-user-tgs.yml
+
+## Create playground root folder ##
+
+  - name: Create playground root folder
+    shell: hdfs dfs -mkdir -p /{{ playground_root_folder.folder_name }}
+
+  - name: Update playground root folder owner
+    shell: hdfs dfs -chown -R {{ playground_root_folder.folder_permission.user_owner }}:{{ playground_root_folder.folder_permission.group_owner}} /{{ playground_root_folder.folder_name }}
+
+  - name: Update playground root folder permission
+    shell: hdfs dfs -chmod {{ playground_root_folder.folder_permission.permission}} /{{ playground_root_folder.folder_name }}
+
+## Create playground user folder ##
+
+  - name: Create playground user folder
+    shell: hdfs dfs -mkdir -p /{{ playground_root_folder.folder_name }}/{{ item.login_name }}
+    loop: "{{ data_scientist }}"
+
+  - name: Update playground subfolder folder owner
+    shell: hdfs dfs -chown -R {{ item.login_name }}:{{ item.folder_group_owner }} /{{ playground_root_folder.folder_name }}/{{ item.login_name }}
+    loop: "{{ data_scientist }}"
+
+  - name: Update playground subfolder folder permission
+    shell: hdfs dfs -chmod {{ item.folder_permission}} /{{ playground_root_folder.folder_name }}/{{ item.login_name }}
+    loop: "{{ data_scientist }}"

@@ -1,0 +1,7 @@
+###  Set time zone
+
+- name: Ensure SELinux is set to enforcing mode
+  lineinfile:
+     path: /etc/sysconfig/ntpdate
+     regexp: '^SYNC_HWCLOCK='
+     line: SYNC_HWCLOCK=yes

@@ -1,0 +1,24 @@
+## Install python-psycopg2 package
+  - name: install the latest version python-psycopg2
+    yum:
+      name: python-psycopg2
+      state: latest
+
+## Install Java-11-open-jdk Package
+  - name: install the latest version of java-11-openjdk
+    yum:
+      name: java-11-openjdk
+      state: latest
+
+## Install postgresql10-server package
+  - name: install the latest version postgresql10-server step 1
+    yum:
+      name: postgresql10-server
+      state: latest
+
+
+## Install postgresql10 package
+  - name: install the latest version postgresql10-server step 2
+    yum:
+      name: postgresql10
+      state: latest

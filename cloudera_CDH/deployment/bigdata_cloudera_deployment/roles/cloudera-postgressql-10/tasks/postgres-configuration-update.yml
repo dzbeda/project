@@ -1,0 +1,31 @@
+
+### Update postgresql paramters  in postgresql.conf####
+
+  - name: Update  /var/lib/pgsql/10/data/postgresql.conf
+    lineinfile:
+      path: "{{postgres_configuration.postgresql_configuration_file_path}}"
+      regexp: '^.*{{item.parameter}}.*'
+      line: "{{ item.parameter }} = {{ item.value }}"
+      state: present
+      backup: yes
+    loop: "{{ postgres_configuration.postgresql_parameters }}"
+
+
+### Update postgresql paramters in pg_hba.conf####
+
+  - name: Update  /var/lib/pgsql/10/data/pg_hba.conf
+    lineinfile:
+      path: "{{ postgres_configuration.pg_hba_configuration_file_path }}"
+      firstmatch: yes
+      insertbefore: ^host.*.all.*.all.*.[^127.0.0.1/32].ident
+      line: host    all             all             0.0.0.0/0               md5
+      state: present
+      backup: yes
+
+
+### Restart postgrse service
+
+  - name: Restart service postgresql-10
+    service:
+      name: postgresql-10
+      state: restarted

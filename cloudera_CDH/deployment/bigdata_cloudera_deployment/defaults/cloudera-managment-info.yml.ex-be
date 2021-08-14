@@ -1,0 +1,9 @@
+cloudera_web_ui:
+  cloudera_username: api-user
+  cloudera_password: <enter-password>
+
+cloudera_ingestion_cluster_name: ingestion
+cloudera_api_secret:
+      remote_template_path: /tmp
+      namespace: default
+      secret_name: cloudera-api

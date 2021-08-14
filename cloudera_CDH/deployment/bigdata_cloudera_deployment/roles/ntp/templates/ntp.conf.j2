@@ -1,0 +1,31 @@
+driftfile /var/lib/ntp/ntp.drift
+
+# Enable this if you want statistics to be logged.
+statsdir /var/log/ntpstats/
+
+statistics loopstats peerstats clockstats
+filegen loopstats file loopstats type day enable
+filegen peerstats file peerstats type day enable
+filegen clockstats file clockstats type day enable
+
+disable monitor
+
+# If you want to provide time to your local subnet, change the next line.
+# (Again, the address is an example only.)
+#broadcast 192.168.123.255
+
+restrict -4 default kod nomodify notrap nopeer noquery
+#restrict -6 default kod nomodify notrap nopeer noquery
+
+# local time
+server 127.127.1.0
+
+fudge 127.127.1.0 stratum 10
+
+restrict 127.0.0.1 mask 255.0.0.0 nomodify notrap
+
+restrict {{ ntp.ntp_server_ip }}
+server {{ ntp.ntp_server_ip }} iburst burst prefer
+
+tos maxdist 16
+

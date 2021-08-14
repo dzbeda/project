@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+
+{% if resolve_search | length > 0 %}
+search {{ resolve_search|join(' ') }}
+{% endif %}
+{% if resolve_domain != "" %}
+domain {{ resolve_domain }}
+{% endif %}
+{% for ns in resolve_nameservers %}
+nameserver {{ ns }}
+{% endfor %}
+{% if resolve_sortlist | length > 0 %}
+{% for sl in resolve_sortlist %}
+sortlist {{ sl }}
+{% endfor %}
+{% endif %}
+{% if resolve_options | length > 0 %}
+options {{ resolve_options|join(' ') }}
+{% endif %}

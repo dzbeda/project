@@ -1,0 +1,32 @@
+RegistryClient {
+com.sun.security.auth.module.Krb5LoginModule required
+useKeyTab=true
+storeKey=true
+useTicketCache=false
+doNotPrompt=true
+serviceName="kafka"
+keyTab="{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+principal="{{ hadoop_system_user.username }}@{{ domain | upper }}";
+};
+
+KafkaClient {
+com.sun.security.auth.module.Krb5LoginModule required
+useKeyTab=true
+storeKey=true
+useTicketCache=false
+doNotPrompt=true
+serviceName="kafka"
+keyTab="{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+principal="{{ hadoop_system_user.username }}@{{ domain | upper }}";
+};
+
+Client {
+com.sun.security.auth.module.Krb5LoginModule required
+useKeyTab=true
+storeKey=true
+useTicketCache=false
+doNotPrompt=true
+serviceName="kafka"
+keyTab="{{ hadoop_system_user.remote_server_keytab_location }}/{{ hadoop_system_user.username }}.{{ hadoop_system_user.keytab_file_extension }}"
+principal="{{ hadoop_system_user.username }}@{{ domain | upper }}";
+};

@@ -1,0 +1,4 @@
+---
+- include: networkmanager-update.yml
+- include: reload-networkmanager.yml
+- include: update-resolve-conf.yml

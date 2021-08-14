@@ -1,0 +1,7 @@
+---
+# tasks file for cloudera-manager
+
+- include: cloudera_management_install_package.yml
+- include: prepare_cloudera_db.yml
+- include: copy-parcels-metadata-files.yml
+

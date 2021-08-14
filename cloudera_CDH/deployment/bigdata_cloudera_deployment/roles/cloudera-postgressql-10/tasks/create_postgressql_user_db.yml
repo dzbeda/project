@@ -1,0 +1,66 @@
+### Update postgresql paramters in pg_hba.conf####
+
+  - name: Enable connection to postgres  without username and password
+    lineinfile:
+      path: "{{ postgres_configuration.pg_hba_configuration_file_path }}"
+      firstmatch: yes
+      insertbefore: ^local.*.all.*.all.*.peer
+      line: host    all all 0.0.0.0/0   trust
+      state: present
+      backup: yes
+
+
+### Restart postgrse service
+  -
+  - name: Restart service postgresql-10
+    service:
+      name: postgresql-10
+      state: restarted
+
+### Create users
+
+  - name: Create postgrse user
+    postgresql_user:
+      login_host: "{{postgres_server.ip}}"
+      #login_password:
+      name: "{{item.role}}"
+      password: "{{item.password}}"
+    loop: "{{postgres_create_users}}"
+
+### Create DB
+
+  - name: Create postgrse  DB
+    postgresql_db:
+      login_host: "{{postgres_server.ip}}"
+      #login_password:
+      name: "{{item.db_name}}"
+      owner: "{{item.owner}}"
+      encoding: "{{item.encoding}}"
+    loop: "{{postgres_create_db}}"
+
+
+### NEED TO CHEKCX THE VALUE
+  - name: Set work mem parameter
+    postgresql_set:
+      login_host: "{{postgres_server.ip}}"
+      #login_password:
+      db: metastore
+      name: standard_conforming_strings
+      value: false
+
+
+### Update postgresql paramters in pg_hba.conf####
+
+  - name: Disable connection to postgrase without username and password
+    lineinfile:
+      path: "{{ postgres_configuration.pg_hba_configuration_file_path }}"
+      state: absent
+      regex: ^host    all all 0.0.0.0/0   trust
+      backup: yes
+
+### Restart postgrse service
+  -
+  - name: Restart service postgresql-10
+    service:
+      name: postgresql-10
+      state: restarted
