@@ -1,8 +1,10 @@
+# Overview
+
 This project include ansible playbook that configure rsyslog to deliver auditd log to a collector server.
 The playbook support both Redhat7 & Redhat 8
 
 
-How  to run it !!
+## How  to run it !!
 1. Make sure you have server running installed with ansible 
 2. Copy audit.yml file to master server under /TBD_location 
 3. copy the host-audit file to /TBD_location
