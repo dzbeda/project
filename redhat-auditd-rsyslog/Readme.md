@@ -13,8 +13,8 @@ The playbook support both Redhat7 & Redhat 8
 4. copy the "audispd-plugins-3.0-0.17.20191104git1c2f876.el8.x86_64.rpm" /TBD_location ; this file is required only for RedHat 8 distribution
 5. browse to /TBD_location
 6. run ansible-playbook -i hosts-audit audit.yml --ask-pass --ask-become-pass
-7. On the first prompt enter the password of the remose server user that is required for the ssh connection 
-8. On the second prompt enter the remote server root user password 
+  A. On the first prompt enter the password of the remose server user that is required for the ssh connection 
+  B. On the second prompt enter the remote server root user password 
 
 
 ## Update 
