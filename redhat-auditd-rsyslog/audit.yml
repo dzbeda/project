@@ -44,14 +44,14 @@
 
     - name: set auditd rules
       lineinfile:
-        path: /etc/audit/rules.d/audit-cognyte.rules
+        path: /etc/audit/rules.d/audit-companyname.rules
         line: "{{ item }}"
         create: yes
       with_items:
-          - "-w /usr/bin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_1"
-          - "-w /bin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_2"
-          - "-w /usr/sbin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_3"
-          - "-w /sbin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_4"
+          - "-w /etc/passwd -p wa -k passwd_changes"
+          - "-w /etc/selinux -p wa -k selinux_changes"
+          - "-w /sbin/insmod -p x -k module_insertion""
+         #- "Add new rules" 
 
     - name: update hostname
       lineinfile:
