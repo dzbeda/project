@@ -1,0 +1,100 @@
+- hosts: audit
+  become: true
+  any_errors_fatal: true
+  gather_facts: True
+  vars:
+    syslog_collector_server: 10.201.55.160
+    syslog_delivery_port: 514
+  tasks:
+
+    - debug:
+        msg: OS distribution is {{ ansible_distribution }} and based on major version {{ ansible_distribution_major_version }}
+
+    - debug:
+       msg: ok
+      when : ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+
+    - name: copy audispd package
+      copy:
+        src: ./audispd-plugins-3.0-0.17.20191104git1c2f876.el8.x86_64.rpm
+        dest: /tmp/audispd-plugins-3.0-0.17.20191104git1c2f876.el8.x86_64.rpm
+      when : ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+
+    - name: install audispd package
+      yum:
+        name: /tmp/audispd-plugins-3.0-0.17.20191104git1c2f876.el8.x86_64.rpm
+        state: present
+      when : ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+
+    - name: update auditd plugin to support syslog
+      lineinfile:
+          path: /etc/audit/plugins.d/syslog.conf
+          regexp: '^active ='
+          line: active = yes
+          create: yes
+      when : ansible_distribution == "RedHat" and ansible_distribution_major_version == "8"
+
+    - name: update auditd plugin to support syslog
+      lineinfile:
+          path: /etc/audisp/plugins.d/syslog.conf
+          regexp: '^active ='
+          line: active = yes
+          create: yes
+      when : ansible_distribution == "RedHat" and ansible_distribution_major_version == "7"
+
+    - name: set auditd rules
+      lineinfile:
+        path: /etc/audit/rules.d/audit-cognyte.rules
+        line: "{{ item }}"
+        create: yes
+      with_items:
+          - "-w /usr/bin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_1"
+          - "-w /bin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_2"
+          - "-w /usr/sbin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_3"
+          - "-w /sbin/ -p wa -k T1068_Exploitation_for_Privilege_Escalation_3_4"
+
+    - name: update hostname
+      lineinfile:
+        path: /etc/audit/auditd.conf
+        regexp: '^name_format ='
+        line: name_format = HOSTNAME
+        create: yes
+
+    - name: disable & stop auditbeat service
+      systemd:
+        name: auditbeat
+        state: stopped
+        enabled: no
+      ignore_errors: yes
+
+    - name: Enable Auditd service
+      systemd:
+        name: auditd
+        enabled: yes
+
+    - name: Restart Auditd service
+      command: service auditd restart
+
+
+    - name: update rsyslog confihg
+      blockinfile:
+        path:  /etc/rsyslog.d/auditd.conf
+        block: |
+          # auditd audit.log
+          $ModLoad imfile
+          $InputFileName /var/log/audit/audit.log
+          $InputFileTag tag_audit_log:
+          $InputFileStateFile audit_log
+          $InputFileSeverity info
+          $InputFileFacility local6
+          $InputRunFileMonitor
+          *.*  @{{ syslog_collector_server }}:{{ syslog_delivery_port }}
+        create: yes
+
+
+    - name: Enable & Restart rsyslog service
+      systemd:
+        name: rsyslog
+        state: restarted
+        enabled: yes
+

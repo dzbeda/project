@@ -1,0 +1,4 @@
+[audit]
+#1.1.1.1 ansible_user=root   ## This is an example for a server that is not running emperor user
+10.201.55.49  #If server dose not include emperor user , add "ansible_user=kuku" like in the above example
+
