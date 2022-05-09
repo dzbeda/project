@@ -15,3 +15,7 @@ The playbook support both Redhat7 & Redhat 8
 6. run ansible-playbook -i hosts-audit audit.yml --ask-pass --ask-become-pass
 7. On the first prompt enter the password of the remose server user that is required for the ssh connection 
 8. On the second prompt enter the remote server root user password 
+
+
+## Update 
+In the audit.yml playbook new rules can be added under "set auditd rules" block
