@@ -60,12 +60,6 @@
         line: name_format = HOSTNAME
         create: yes
 
-    - name: disable & stop auditbeat service
-      systemd:
-        name: auditbeat
-        state: stopped
-        enabled: no
-      ignore_errors: yes
 
     - name: Enable Auditd service
       systemd:
